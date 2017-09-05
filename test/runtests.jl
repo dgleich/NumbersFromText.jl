@@ -46,6 +46,18 @@ end
   @test a == data
 end
 
+@testset "readarrays" begin
+  data = vec([1/3*ones(500) ones(500)]
+  buf = IOBuffer()
+  for i in data
+    print(buf, i)
+    print(buf, "  ")
+  end
+  seek(buf, 0) # reset buffer
+  a = readarrays!(buf, zeros(0), zeros(Int, 0))
+  @test a == data
+end
+
 #=
 @testset "readmatrix" begin
   data = randn(3,2)

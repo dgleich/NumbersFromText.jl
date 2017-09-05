@@ -180,3 +180,5 @@ else
         return unsafe_get(result)
     end
 end
+
+ParsableNumbers = Union{Float16,Float32,Float64,Integer}
