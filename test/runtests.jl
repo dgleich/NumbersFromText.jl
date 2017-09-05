@@ -44,6 +44,15 @@ end
   seek(buf, 0) # reset buffer
   a = readarray!(buf, zeros(0))
   @test a == data
+
+  data = ones(Int, 500)
+  buf = IOBuffer()
+  map(x -> println(buf, x), data)
+  seek(buf, 0)
+  a = readarray!(buf, zeros(Int, 0))
+  @test a == data
+  seek(buf, 0)
+  a = readarray(Int, buf)
 end
 
 @testset "readarrays" begin
@@ -60,6 +69,21 @@ end
   a1, a2 = readarrays!(buf, zeros(0), zeros(Int, 0))
   @test a1 == data1
   @test a2 == data2
+
+  seek(buf, 0) # reset buffer
+  a1, a2 = readarrays(buf, Float64, Int)
+  @test a1 == data1
+  @test a2 == data2
+
+
+  data = convert(Array{UInt8}, "1.0"*("0"^2048)*"      2.0")
+  buf = IOBuffer(data)
+  @test_throws ArgumentError readarrays(buf, Float64)
+  seek(buf,0)
+  @test_throws ArgumentError readarrays(buf, Float64; maxbuf=2048)
+  seek(buf,0)
+  a, = readarrays(buf, Float64; maxbuf=2052)
+  @test a == [1.0,2.0]
 end
 
 #=

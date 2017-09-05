@@ -61,11 +61,17 @@ function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
   as
 end
 
-readarrays!(filename::AbstractString, as...; kwargs...)
+function readarrays!(filename::AbstractString, as...; kwargs...)
   open(filename, "r") do fh
-    return readarrays!(fh, a; kwargs...)
+    return readarrays!(fh, as...; kwargs...)
   end
 end
 
 readarrays(io, Ts...; kwargs...) =
   readarrays!(io, map(T -> zeros(T,0), Ts)...; kwargs...)
+
+function readarrays(filename::AbstractString, as...; kwargs...)
+  open(filename, "r") do fh
+    return readarrays(fh, as...; kwargs...)
+  end
+end
