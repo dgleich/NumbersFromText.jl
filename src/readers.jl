@@ -16,7 +16,6 @@ function readarray!(io, a; maxbuf=_default_maxbuf_size)
 end
 
 # Given a filename, refer to the type with an IO
-# TODO, see if there is a better pattern to avoid maxbuf
 function readarray!(filename::AbstractString, a; kwargs...)
   open(filename, "r") do fh
     return readarray!(fh, a; kwargs...)
@@ -37,6 +36,12 @@ function readarray(::Type{T}, filename::AbstractString; kwargs...) where {T <: P
   end
 end
 
+"""
+Documentation
+"""
+:readarrays, :readarrays!
+
+
 function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
   Ts = map(eltype, as)
   N = length(Ts)
@@ -53,4 +58,14 @@ function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
       cur = 1
     end
   end
+  as
 end
+
+readarrays!(filename::AbstractString, as...; kwargs...)
+  open(filename, "r") do fh
+    return readarrays!(fh, a; kwargs...)
+  end
+end
+
+readarrays(io, Ts...; kwargs...) =
+  readarrays!(io, map(T -> zeros(T,0), Ts)...; kwargs...)

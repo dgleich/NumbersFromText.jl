@@ -2,6 +2,7 @@
 # David Gleich modified it to support parsing Array{UInt8} as well
 
 import Base.Checked: add_with_overflow, mul_with_overflow
+import Base.next
 
 ## string to integer functions ##
 
@@ -89,7 +90,7 @@ function tryparse_internal(::Type{T}, s::Array{UInt8}, startpos::Int, endpos::In
                UInt8('A') <= c <= UInt8('Z') ? c-UInt8('A')+10 :
                UInt8('a') <= c <= UInt8('z') ? c-UInt8('a')+a  : base
         if d >= base
-            raise && throw(ArgumentError("invalid base $base digit $(repr(c)) in $(repr(SubString(s,startpos,endpos)))"))
+            raise && throw(ArgumentError("invalid base $base digit $(repr(c)) in $(repr(String(s[startpos:endpos])))"))
             return _n
         end
         n *= base
@@ -157,6 +158,11 @@ end
 function myparse(::Type{T}, s::Array{UInt8}) where T<:Integer
     get(tryparse_internal(T, s, start(s), endof(s), 0, true)) # Zero means, "figure it out"
 end
+
+function myparse(::Type{T}, s::Array{UInt8}, pos::Int64, len::Int64) where T<:Integer
+    get(tryparse_internal(T, s, pos, len, 0, true)) # Zero means, "figure it out"
+end
+
 
 
 

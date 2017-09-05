@@ -47,15 +47,19 @@ end
 end
 
 @testset "readarrays" begin
-  data = vec([1/3*ones(500) ones(500)]
+  data1 = 1/3*ones(500)
+  data2 = ones(Int, 500)
   buf = IOBuffer()
-  for i in data
-    print(buf, i)
+  for i in eachindex(data1)
+    print(buf, data1[i] )
+    print(buf, "  ")
+    print(buf, data2[i] )
     print(buf, "  ")
   end
   seek(buf, 0) # reset buffer
-  a = readarrays!(buf, zeros(0), zeros(Int, 0))
-  @test a == data
+  a1, a2 = readarrays!(buf, zeros(0), zeros(Int, 0))
+  @test a1 == data1
+  @test a2 == data2
 end
 
 #=
