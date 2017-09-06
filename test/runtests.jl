@@ -114,3 +114,25 @@ end
   a = readmatrix(buf; maxbuf = 2052, transpose=false)
   @test a == [1.0 1.0; 1.0 2.0]'
 end
+
+
+@testset "partition_buffer" begin
+  data = collect(1:500)
+  buf = IOBuffer()
+  map(x -> println(buf, x), data)
+  seek(buf, 0)
+  dataarray = take!(buf)
+
+  maxparts = 49
+  bufs = allocate_buffers(maxparts)
+
+  for nparts=1:maxparts
+    n = partition_buffer(dataarray, length(dataarray), nparts, bufs, UInt8('\n'))
+    newdata = Vector{UInt8}()
+    for i=1:n
+      push!(newdata, read(bufs[i])...)
+    end
+    @test dataarray == newdata
+  end
+
+end
