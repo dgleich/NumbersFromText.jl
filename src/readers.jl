@@ -41,7 +41,6 @@ Documentation
 """
 :readarrays, :readarrays!
 
-
 function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
   Ts = map(eltype, as)
   N = length(Ts)
@@ -75,3 +74,37 @@ function readarrays(filename::AbstractString, as...; kwargs...)
     return readarrays(fh, as...; kwargs...)
   end
 end
+
+
+"""
+Documentation
+"""
+:readmatrix
+
+function readmatrix(::Type{T}, io; transpose::Bool=true, kwargs...) where {T <: ParsableNumbers}
+  firstline = readline(io) # read the first line
+  a = zeros(T, 0)
+  readarray!(IOBuffer(firstline), a; kwargs...)
+  ncols = length(a)
+  readarray!(io, a; kwargs...)
+  nrows, nrem = divrem(length(a),ncols)
+  if nrem != 0
+    throw(ArgumentError("first line had $(ncols) entries," *
+      " but overall there were $(length(a)) entries for " *
+      "$(nrows) rows and $(nrem) left"))
+  else
+    if transpose
+      return Base.transpose(reshape(a, ncols, nrows))
+    else
+      return reshape(a, ncols, nrows)
+    end
+  end
+end
+readmatrix(io; kwargs...) = readmatrix(Float64, io; kwargs...)
+
+function readmatrix(::Type{T}, filename::AbstractString; kwargs...) where {T <: ParsableNumbers}
+  open(filename, "r") do fh
+    return readarray(T, fh; kwargs...)
+  end
+end
+readmatrix(filename::AbstractString; kwargs...) = readmatrix(Float64, kwargs...)

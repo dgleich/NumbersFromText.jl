@@ -86,7 +86,7 @@ end
   @test a == [1.0,2.0]
 end
 
-#=
+
 @testset "readmatrix" begin
   data = randn(3,2)
   buf = IOBuffer()
@@ -101,12 +101,16 @@ end
 
   data = convert(Array{UInt8}, "1.0"*("0"^2048))
   buf = IOBuffer(data)
-  @test_throws ArgumentError a = readarray(buf)
+  @test_throws ArgumentError a = readmatrix(buf)
 
 
   data = convert(Array{UInt8}, "1.0 1.0\n1.0"*("0"^2048)*"      2.0")
   buf = IOBuffer(data)
   a = readmatrix(buf; maxbuf = 2052)
   @test a == [1.0 1.0; 1.0 2.0]
+
+  data = convert(Array{UInt8}, "1.0 1.0\n1.0"*("0"^2048)*"      2.0")
+  buf = IOBuffer(data)
+  a = readmatrix(buf; maxbuf = 2052, transpose=false)
+  @test a == [1.0 1.0; 1.0 2.0]'
 end
-=#
