@@ -9,7 +9,7 @@ end
 
   data = rand(Int, 32*1024*1024)
   buf = IOBuffer()
-  map(x -> println(buf, x), data)
+  foreach(x -> println(buf, x), data)
   seek(buf, 0)
   a, = readarrays!(Val{true}, buf, zeros(Int, 0))
   @test a == data
@@ -57,7 +57,7 @@ end
 
   data = ones(Int, 500)
   buf = IOBuffer()
-  map(x -> println(buf, x), data)
+  foreach(x -> println(buf, x), data)
   seek(buf, 0)
   a = readarray!(buf, zeros(Int, 0))
   @test a == data
@@ -129,7 +129,7 @@ end
 @testset "partition_buffer" begin
   data = collect(1:500)
   buf = IOBuffer()
-  map(x -> println(buf, x), data)
+  foreach(x -> println(buf, x), data)
   seek(buf, 0)
   dataarray = take!(buf)
 
