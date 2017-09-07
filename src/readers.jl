@@ -41,7 +41,7 @@ Documentation
 """
 :readarrays, :readarrays!
 
-function readarrays!(toks::SpaceTokenizer, as...)
+function readarrays1!(toks::SpaceTokenizer, as...)
   Ts = map(eltype, as)
   N = length(Ts)
 
@@ -58,6 +58,30 @@ function readarrays!(toks::SpaceTokenizer, as...)
     end
   end
   return as
+end
+
+@generated function readarrays!(toks::SpaceTokenizer, as...)
+  N = length(as)
+  Ts = map(eltype, as)
+
+  # the basic loop is simple, we just keep reading!
+  expr = quote
+    while true
+    end
+    return as
+  end
+
+  for i=1:length(as)
+    expr_read = quote
+        curlen = step!(toks)
+        if curlen <= 0
+          break
+        end
+        push!(as[$i], myparse($(Ts[i]), toks.buf, 1, curlen))
+    end
+    push!(expr.args[2].args[2].args, expr_read)
+  end
+  return expr
 end
 
 function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
