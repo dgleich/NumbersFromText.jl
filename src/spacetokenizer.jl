@@ -2,7 +2,7 @@
 
 
 const _smallbuf_size = 256
-@show _smallbuf_size
+#@show _smallbuf_size
 
 mutable struct SpaceTokenizer{T}
     io::T
@@ -19,7 +19,14 @@ mutable struct SpaceTokenizer{T}
     end
 end
 
-
+"""
+This could be executed after the underyling IOBuffer has been
+reset.
+"""
+function reset(itr::SpaceTokenizer)
+  itr.smallbuflen = readbytes!(itr.io, itr.smallbuf, _smallbuf_size)
+  itr.smallbufpos = 1
+end
 
 @inline function _read_spaces(itr)
     #@show String(smallbuf), smallbufpos, smallbuflen

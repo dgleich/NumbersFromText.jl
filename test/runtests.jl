@@ -5,6 +5,16 @@ using Base.Test
 
 end
 
+@testset "parallel_readarrays" begin
+
+  data = rand(Int, 32*1024*1024)
+  buf = IOBuffer()
+  map(x -> println(buf, x), data)
+  seek(buf, 0)
+  a, = readarrays!(Val{true}, buf, zeros(Int, 0))
+  @test a == data
+end
+
 @testset "readarray" begin
   data = [1/3*ones(500); pi*ones(500); nextfloat(0.0)*ones(500)]
   buf = IOBuffer()

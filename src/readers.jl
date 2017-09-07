@@ -41,10 +41,10 @@ Documentation
 """
 :readarrays, :readarrays!
 
-function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
+function readarrays!(toks::SpaceTokenizer, as...)
   Ts = map(eltype, as)
   N = length(Ts)
-  toks = SpaceTokenizer(io, maxbuf)
+
   cur = 1
   while true
     curlen = step!(toks)
@@ -57,7 +57,12 @@ function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
       cur = 1
     end
   end
-  as
+  return as
+end
+
+function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
+  toks = SpaceTokenizer(io, maxbuf)
+  return readarrays!(toks, as...)
 end
 
 function readarrays!(filename::AbstractString, as...; kwargs...)

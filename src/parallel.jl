@@ -84,3 +84,77 @@ function partition_buffer(buf::Vector{UInt8}, len::Integer,
 
   return nbufs
 end
+
+
+
+"""
+Start is the first index
+len is the last valid index in buf to search
+"""
+function reverse_search_delim(buf::Vector{UInt8}, start::Integer, len::Integer, delim::UInt8)
+  for idx = len:-1:start
+    if buf[idx] == delim
+      return idx
+    end
+  end
+  return start
+end
+
+""" Fill up parbuf with bytes such that we end with a delimiter. """
+function buffer_to_delim(parbuf, io, minlen, maxlen, delim::UInt8)
+  curlen = readbytes!(io, parbuf, minlen)
+  if curlen == minlen
+    while parbuf[curlen] != delim && !eof(io) && curlen < maxlen
+      parbuf[curlen+1] = read(io, UInt8)
+      curlen += 1
+    end
+    if curlen == maxlen && !eof(io)
+      throw(ArgumentError("could not find delimiter in $(maxlen-minlen) bytes " *
+        "try increasing delimzone"))
+    end
+    # otherwise, we can just return curlen
+  else # we got all the data, so just return curlen
+  end
+  return curlen
+end
+
+const _default_parbuf_size=8192*1024
+const _default_delimzoone=1024*1024
+@show Threads.nthreads()
+
+# read in parallel
+function readarrays!(::Type{Val{true}}, io, as...;
+  maxbuf=_default_maxbuf_size, parbuf=_default_parbuf_size,
+  nthreads = Threads.nthreads(), delim=UInt8('\n'), delimzone=1024*1024)
+
+  assert(delimzone < parbuf)
+
+  # allocate buffers and tokenizers for each thread,
+  # as well as sub-arrays
+  bufs = allocate_buffers(nthreads)
+  toks = map(x -> SpaceTokenizer(x, maxbuf), bufs) # create the tokenizers
+  par_as = map(_ -> map(x -> zeros(eltype(x), 0), as), 1:nthreads) # create the arrays
+
+  buf = zeros(UInt8, parbuf)
+
+  while true
+    buflen = buffer_to_delim(buf, io, parbuf-delimzone, parbuf, delim)
+    if buflen == 0
+      break
+    end
+
+    nvalid = partition_buffer(buf, buflen, nthreads, bufs, delim)
+    Threads.@threads for i=1:nvalid
+      reset(toks[i]) # reset the tokenizer
+      foreach(x -> resize!(x, 0), par_as[i]) # reset each thread's info
+      readarrays!(toks[i], par_as[i]...)
+    end
+    for i=1:nvalid
+      for j=1:length(as)
+        append!(as[j], par_as[i][j])
+      end
+    end
+  end
+
+  return as
+end
