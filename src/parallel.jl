@@ -111,6 +111,8 @@ function buffer_to_delim(parbuf, io, minlen, maxlen, delim::UInt8)
     if curlen == maxlen && !eof(io)
       throw(ArgumentError("could not find delimiter in $(maxlen-minlen) bytes " *
         "try increasing delimzone"))
+    elseif curlen == length(parbuf) # our buffer is full, allocate more space
+      resize!(parbuf, min(2*length(parbuf), maxlen))
     end
     # otherwise, we can just return curlen
   else # we got all the data, so just return curlen
@@ -118,16 +120,16 @@ function buffer_to_delim(parbuf, io, minlen, maxlen, delim::UInt8)
   return curlen
 end
 
-const _default_parbuf_size=8192*1024
-const _default_delimzoone=1024*1024
+const _default_parbuf_size=512*1024
+const _default_delimzone=10
 @show Threads.nthreads()
 
 # read in parallel
 function readarrays!(::Type{Val{true}}, io, as...;
   maxbuf=_default_maxbuf_size, parbuf=_default_parbuf_size,
-  nthreads = Threads.nthreads(), delim=UInt8('\n'), delimzone=1024*1024)
+  nthreads = Threads.nthreads(), delim=UInt8('\n'), delimzone=_default_delimzone)
 
-  assert(delimzone < parbuf)
+  delim_search = delimzone*parbuf
 
   # allocate buffers and tokenizers for each thread,
   # as well as sub-arrays
@@ -136,9 +138,10 @@ function readarrays!(::Type{Val{true}}, io, as...;
   par_as = map(_ -> map(x -> zeros(eltype(x), 0), as), 1:nthreads) # create the arrays
 
   buf = zeros(UInt8, parbuf)
+  sizehint!(buf, 2*parbuf) # allow us to expand slightly.
 
   while true
-    buflen = buffer_to_delim(buf, io, parbuf-delimzone, parbuf, delim)
+    buflen = buffer_to_delim(buf, io, parbuf, delim_search+parbuf, delim)
     if buflen == 0
       break
     end
