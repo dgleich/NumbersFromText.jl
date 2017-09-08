@@ -1,10 +1,17 @@
 using NumbersFromText
 using Base.Test
 
+dir = joinpath(dirname(@__FILE__),"test_files/")
+
 @testset "SpaceTokenizer" begin
 
 end
 
+array_int_float_filename = joinpath(dir, "arrays_int_float.txt")
+array_int_float_contents = Any[
+Vector{Int}([1 , 2 , 3 , 4 , 5 , 6 , -1, -2]),
+Vector{Float64}([3.0, 4.0, 5.0, 6.0, -1.0, 1.0e18, -1.0e18, 1.23412341234123512341234e-000008])
+]
 
 @testset "readarray" begin
   data = [1/3*ones(500); pi*ones(500); nextfloat(0.0)*ones(500)]
@@ -54,6 +61,11 @@ end
   @test a == data
   seek(buf, 0)
   a = readarray(Int, buf)
+
+  a = readarray(array_int_float_filename)
+  @test a == vec(hcat(array_int_float_contents...)')
+
+
 end
 
 @testset "readarrays" begin
@@ -85,6 +97,10 @@ end
   seek(buf,0)
   a, = readarrays(buf, Float64; maxbuf=2052)
   @test a == [1.0,2.0]
+
+  a1,a2 = readarrays(array_int_float_filename, Int, Float64)
+  @test Any[a1,a2] == array_int_float_contents
+
 end
 
 
@@ -114,6 +130,9 @@ end
   buf = IOBuffer(data)
   a = readmatrix(buf; maxbuf = 2052, transpose=false)
   @test a == [1.0 1.0; 1.0 2.0]'
+
+  a = readmatrix(joinpath(array_int_float_filename))
+  @test a == hcat(array_int_float_contents...)
 end
 
 

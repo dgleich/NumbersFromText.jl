@@ -1,31 +1,9 @@
-
-
 const _default_maxbuf_size = 2048
-
 
 """
 Documentation
 """
 :readarrays, :readarrays!
-
-function readarrays1!(toks::SpaceTokenizer, as...)
-  Ts = map(eltype, as)
-  N = length(Ts)
-
-  cur = 1
-  while true
-    curlen = step!(toks)
-    if curlen <= 0
-      break
-    end
-    push!(as[cur], myparse(Ts[cur], toks.buf, 1, curlen))
-    cur += 1
-    if cur > N
-      cur = 1
-    end
-  end
-  return as
-end
 
 @generated function readarrays!(toks::SpaceTokenizer, as...)
   N = length(as)
@@ -133,7 +111,7 @@ readmatrix(io; kwargs...) = readmatrix(Float64, io; kwargs...)
 
 function readmatrix(::Type{T}, filename::AbstractString; kwargs...) where {T <: ParsableNumbers}
   open(filename, "r") do fh
-    return readarray(T, fh; kwargs...)
+    return readmatrix(T, fh; kwargs...)
   end
 end
-readmatrix(filename::AbstractString; kwargs...) = readmatrix(Float64, kwargs...)
+readmatrix(filename::AbstractString; kwargs...) = readmatrix(Float64, filename; kwargs...)
