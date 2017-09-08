@@ -1,40 +1,7 @@
 
 
 const _default_maxbuf_size = 2048
-function readarray!(io, a; maxbuf=_default_maxbuf_size)
-  T = eltype(a)
-  toks = SpaceTokenizer(io, maxbuf)
-  #@code_warntype step!(toks)
-  while true
-      curlen = step!(toks)
-      if curlen <= 0
-          break
-      end
-      push!(a, myparse(T, toks.buf, 1, curlen))
-  end
-  return a
-end
 
-# Given a filename, refer to the type with an IO
-function readarray!(filename::AbstractString, a; kwargs...)
-  open(filename, "r") do fh
-    return readarray!(fh, a; kwargs...)
-  end
-end
-
-readarray(io; kwargs...) = readarray(Float64, io; kwargs...)
-readarray(::Type{T}, io; kwargs...) where {T <: ParsableNumbers} =
-  readarray!(io, zeros(T,0); kwargs...)
-
-# Everything with filenames refers to the types of io
-readarray(filename::AbstractString; kwargs...) =
-  readarray(Float64, filename; kwargs...)
-
-function readarray(::Type{T}, filename::AbstractString; kwargs...) where {T <: ParsableNumbers}
-  open(filename, "r") do fh
-    return readarray(T, fh; kwargs...)
-  end
-end
 
 """
 Documentation
@@ -103,6 +70,39 @@ function readarrays(filename::AbstractString, as...; kwargs...)
     return readarrays(fh, as...; kwargs...)
   end
 end
+
+"""
+"""
+:readarray, :readarray!
+
+readarray!(io, a; kwargs...) = readarrays!(io, a; kwargs...)[1]
+
+readarray(::Type{T}, io; kwargs...) where {T <: ParsableNumbers} =
+  readarray!(io, zeros(T,0); kwargs...)
+readarray(io; kwargs...) = readarray(Float64, io; kwargs...)
+
+#=
+# Given a filename, refer to the type with an IO
+function readarray!(filename::AbstractString, a; kwargs...)
+  open(filename, "r") do fh
+    return readarray!(fh, a; kwargs...)
+  end
+end
+
+readarray(io; kwargs...) = readarray(Float64, io; kwargs...)
+readarray(::Type{T}, io; kwargs...) where {T <: ParsableNumbers} =
+  readarray!(io, zeros(T,0); kwargs...)
+
+# Everything with filenames refers to the types of io
+readarray(filename::AbstractString; kwargs...) =
+  readarray(Float64, filename; kwargs...)
+
+function readarray(::Type{T}, filename::AbstractString; kwargs...) where {T <: ParsableNumbers}
+  open(filename, "r") do fh
+    return readarray(T, fh; kwargs...)
+  end
+end
+=#
 
 
 """
