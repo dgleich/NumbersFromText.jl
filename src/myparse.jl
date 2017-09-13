@@ -1,6 +1,10 @@
 # This file is a part of Julia. License is MIT: https://julialang.org/license
 # David Gleich modified it to support parsing Array{UInt8} as well
 
+# Except now I'm not really using this code. See the myparse function
+# below for a simple solution.
+# Will delete soon!
+
 import Base.Checked: add_with_overflow, mul_with_overflow
 import Base.next
 
@@ -151,6 +155,7 @@ tryparse(::Type{T}, s::Array{UInt8}, base::Integer) where {T<:Integer} =
 tryparse(::Type{T}, s::Array{UInt8}) where {T<:Integer} =
     tryparse_internal(T, s, start(s), endof(s), 0, false)
 
+#=
 function myparse(::Type{T}, s::Array{UInt8}, base::Integer) where T<:Integer
     get(tryparse_internal(T, s, start(s), endof(s), check_valid_base(base), true))
 end
@@ -162,8 +167,49 @@ end
 function myparse(::Type{T}, s::Array{UInt8}, pos::Int64, len::Int64) where T<:Integer
     get(tryparse_internal(T, s, pos, len, 0, true)) # Zero means, "figure it out"
 end
+=#
 
-
+function myparse(::Type{T}, a::Vector{UInt8}, start::Integer, len::Integer) where {T <: Integer}
+  i = start
+  n::T = zero(T)
+  s::T = one(T)
+  if a[1] == UInt8('-')
+    s = -s
+    i += 1
+  elseif a[1] == UInt8('+')
+    i += 1
+  end
+  max_without_overflow = div(typemax(T)-9,10) # the larg
+  while i <= len && n <= max_without_overflow
+    if UInt8('0') <= a[i] <= UInt8('9')
+      n *= T(10)
+      n += T(a[i]-UInt8('0'))
+    else
+      throw(ArgumentError("$(String(a[start:len])) is not a valid base 10 integer"))
+    end
+    i += 1
+  end
+  (T <: Signed) && (n *= s)
+  f::Bool = false
+  while i <= len
+    if UInt8('0') <= a[i] <= UInt8('9')
+      d = T(a[i]-UInt8('0'))
+      (T <: Signed) && (d *= s)
+      n10,f1 = mul_with_overflow(T(10), n)
+      f = f|f1
+      n,f1 = add_with_overflow(n10,d)
+      f = f|f1
+    else
+      throw(ArgumentError("$(String(a[start:len])) is not a valid base 10 integer"))
+    end
+    i += 1
+  end
+  if f
+    throw(ArgumentError("$(String(a[start:len])) caused overflow for type $(T)"))
+  end
+  return n
+end
+myparse(::Type{T}, a::Vector{UInt8}) where {T <: Integer}  = parse_int(T, a, 1, length(a))
 
 
 @inline tryparse(::Type{Float64}, s::Vector{UInt8}, pos::Int64, len::Int64) =
