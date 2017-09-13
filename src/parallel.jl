@@ -107,15 +107,16 @@ function buffer_to_delim(parbuf, io, minlen, maxlen, delim::UInt8)
     while parbuf[curlen] != delim && !eof(io) && curlen < maxlen
       parbuf[curlen+1] = read(io, UInt8)
       curlen += 1
-    end
-    if curlen == maxlen && !eof(io)
-      throw(ArgumentError("could not find delimiter in $(maxlen-minlen) bytes " *
-        "try increasing delimzone"))
-    elseif curlen == length(parbuf) # our buffer is full, allocate more space
-      resize!(parbuf, min(2*length(parbuf), maxlen))
+
+      if curlen == maxlen && !eof(io)
+        throw(ArgumentError("could not find delimiter in $(maxlen-minlen) bytes " *
+          "try increasing delimzone"))
+      elseif curlen == length(parbuf) # our buffer is full, allocate more space
+        resize!(parbuf, min(2*length(parbuf), maxlen))
+      end
     end
     # otherwise, we can just return curlen
-  else # we got all the data, so just return curlen
+  else # we got all the data, so just return curlen, i.e. we hit EOF
   end
   return curlen
 end
@@ -137,8 +138,7 @@ function readarrays!(::Type{Val{true}}, io, as...;
   toks = map(x -> SpaceTokenizer(x, maxbuf), bufs) # create the tokenizers
   par_as = map(_ -> map(x -> zeros(eltype(x), 0), as), 1:nthreads) # create the arrays
 
-  buf = zeros(UInt8, parbuf)
-  sizehint!(buf, 2*parbuf) # allow us to expand slightly.
+  buf = zeros(UInt8, 2*parbuf)
 
   while true
     buflen = buffer_to_delim(buf, io, parbuf, delim_search+parbuf, delim)
