@@ -131,7 +131,7 @@ function readarrays!(::Type{Val{true}}, io, as...;
   nthreads::Int = Threads.nthreads(), delim::UInt8=UInt8('\n'),
   delimzone::Int=_default_delimzone)
 
-  delim_search = delimzone*parbuf
+  delim_search::Int = delimzone*parbuf
 
   # allocate buffers and tokenizers for each thread,
   # as well as sub-arrays
@@ -139,7 +139,7 @@ function readarrays!(::Type{Val{true}}, io, as...;
   toks = map(x -> SpaceTokenizer(x, maxbuf), bufs) # create the tokenizers
   par_as = map(_ -> map(x -> zeros(eltype(x), 0), as), 1:nthreads) # create the arrays
 
-  buf = zeros(UInt8, 2*parbuf)
+  buf::Vector{UInt8} = Vector{UInt8}(2*parbuf)
 
   while true
     buflen = buffer_to_delim(buf, io, parbuf, delim_search+parbuf, delim)
@@ -148,17 +148,23 @@ function readarrays!(::Type{Val{true}}, io, as...;
     end
 
     nvalid = partition_buffer(buf, buflen, nthreads, bufs, delim)
-    Threads.@threads for i=1:nvalid
+    for i=1:nvalid
       reset(toks[i]) # reset the tokenizer
       foreach(x -> resize!(x, 0), par_as[i]) # reset each thread's info
       readarrays!(toks[i], par_as[i]...)
     end
-    for i=1:nvalid
-      for j=1:length(as)
-        append!(as[j], par_as[i][j])
+    for j=1:length(as)
+      for i=1:nvalid
+        myappend!(as[j], par_as[i][j])
       end
     end
   end
 
   return as
+end
+
+function myappend!(out::AbstractArray{T}, in::AbstractArray{T}) where T
+  for k in in
+    push!(out, k)
+  end
 end
