@@ -127,8 +127,9 @@ const _default_delimzone=10
 
 # read in parallel
 function readarrays!(::Type{Val{true}}, io, as...;
-  maxbuf=_default_maxbuf_size, parbuf=_default_parbuf_size,
-  nthreads = Threads.nthreads(), delim=UInt8('\n'), delimzone=_default_delimzone)
+  maxbuf::Int=_default_maxbuf_size, parbuf::Int=_default_parbuf_size,
+  nthreads::Int = Threads.nthreads(), delim::UInt8=UInt8('\n'),
+  delimzone::Int=_default_delimzone)
 
   delim_search = delimzone*parbuf
 
