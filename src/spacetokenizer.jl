@@ -11,7 +11,7 @@ mutable struct SpaceTokenizer{T}
     smallbufpos::Int
     smallbuflen::Int
 
-    SpaceTokenizer(stream::T) where {T <: IO} = EachToken(stream, 2^10)
+    SpaceTokenizer(stream::T) where {T <: IO} = SpaceTokenizer(stream, 2^10)
     SpaceTokenizer(stream::T, maxbuf::Int) where {T <: IO} = begin
         smallbuf = Array{UInt8,1}(_smallbuf_size)
         smallbuflen = readbytes!(stream, smallbuf, _smallbuf_size)
