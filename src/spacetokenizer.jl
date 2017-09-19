@@ -4,18 +4,18 @@
 const _smallbuf_size = 256
 #@show _smallbuf_size
 
-mutable struct SpaceTokenizer{T}
+mutable struct SpaceTokenizer{T} 
     io::T
     buf::Array{UInt8,1}
     smallbuf::Array{UInt8,1}
     smallbufpos::Int
-    smallbuflen::Int
+    smallbuflen::Int    
 
     SpaceTokenizer(stream::T) where {T <: IO} = SpaceTokenizer(stream, 2^10)
-    SpaceTokenizer(stream::T, maxbuf::Int) where {T <: IO} = begin
+    SpaceTokenizer(stream::T, initbuf::Int) where {T <: IO} = begin
         smallbuf = Array{UInt8,1}(_smallbuf_size)
         smallbuflen = readbytes!(stream, smallbuf, _smallbuf_size)
-        new{T}(stream, Array{UInt8,1}(maxbuf), smallbuf, 1, smallbuflen)
+        new{T}(stream, Array{UInt8,1}(initbuf), smallbuf, 1, smallbuflen)
     end
 end
 
@@ -28,7 +28,7 @@ function reset(itr::SpaceTokenizer)
   itr.smallbufpos = 1
 end
 
-@inline function _read_spaces(itr)
+@inline function _read_spaces(itr::SpaceTokenizer)
     #@show String(smallbuf), smallbufpos, smallbuflen
     @inbounds while itr.smallbuflen > 0
         if isspacecode(itr.smallbuf[itr.smallbufpos])
@@ -45,6 +45,8 @@ end
     return itr.smallbuflen > 0
 end
 
+#@inline _is_record_code(b::UInt8, itr::SpaceTokenizer{T,S,R}) = match(::Val{S}, b)
+#@inline _is_separator_code(b::UInt8, itr::SpaceTokenizer{T,S,R}) = match(::Val{S}, b)
 
 @inline function _buffer_nonspaces(itr)
     curbuf = 0
@@ -54,7 +56,8 @@ end
         else
             curbuf += 1
             if curbuf > length(itr.buf)
-                throw(ArgumentError("tokensize exceeded buffer"))
+               resize!(itr.buf, 2*length(itr.buf)) 
+                #throw(ArgumentError("tokensize exceeded buffer"))
             end
             itr.buf[curbuf] = itr.smallbuf[itr.smallbufpos] # save the current value
             itr.smallbufpos += 1
@@ -67,6 +70,8 @@ end
     end
     return curbuf
 end
+
+#@inline function record_sep(itr::SpaceTokenizer)
 
 @inline function step!(itr::SpaceTokenizer)
     # The step function has to read through spaces

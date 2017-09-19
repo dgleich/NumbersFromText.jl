@@ -26,9 +26,9 @@ Vector{Float64}([3.0, 4.0, 5.0, 6.0, -1.0, 1.0e18, -1.0e18, 1.234123412341235123
 
   data = convert(Array{UInt8}, "1.0"*("0"^2048)*"      2.0")
   buf = IOBuffer(data)
-  @test_throws ArgumentError readarray(buf)
+  @test [1.0,2.] == readarray(buf)
   seek(buf,0)
-  @test_throws ArgumentError readarray(buf; maxbuf=2048)
+  @test [1.0,2.0] == readarray(buf; maxbuf=2048)
   seek(buf,0)
   a = readarray(buf; maxbuf=2052)
   @test a == [1.0,2.0]
@@ -91,9 +91,9 @@ end
 
   data = convert(Array{UInt8}, "1.0"*("0"^2048)*"      2.0")
   buf = IOBuffer(data)
-  @test_throws ArgumentError readarrays(buf, Float64)
+  @test  readarrays(buf, Float64)[1] == [1.0,2.0]
   seek(buf,0)
-  @test_throws ArgumentError readarrays(buf, Float64; maxbuf=2048)
+  readarrays(buf, Float64; maxbuf=2048)[1] == [1.0,2.0]
   seek(buf,0)
   a, = readarrays(buf, Float64; maxbuf=2052)
   @test a == [1.0,2.0]
@@ -118,7 +118,8 @@ end
 
   data = convert(Array{UInt8}, "1.0"*("0"^2048))
   buf = IOBuffer(data)
-  @test_throws ArgumentError a = readmatrix(buf)
+  a = readmatrix(buf)
+  @test a == ones(1,1)
 
 
   data = convert(Array{UInt8}, "1.0 1.0\n1.0"*("0"^2048)*"      2.0")
