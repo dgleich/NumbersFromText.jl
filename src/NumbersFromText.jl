@@ -11,6 +11,6 @@ export readmatrix
 export readarray, readarray!, readarrays, readarrays!
 
 include("parallel.jl")
-export partition_buffer, allocate_buffers
+export partition_buffer, allocate_buffers, parallel_readarrays!
 
 end
