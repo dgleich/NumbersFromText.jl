@@ -4,18 +4,18 @@
 const _smallbuf_size = 256
 #@show _smallbuf_size
 
-mutable struct SpaceTokenizer{T} 
+mutable struct SpaceTokenizer{T}
     io::T
     buf::Array{UInt8,1}
     smallbuf::Array{UInt8,1}
     smallbufpos::Int
-    smallbuflen::Int    
+    smallbuflen::Int
 
     SpaceTokenizer(stream::T) where {T <: IO} = SpaceTokenizer(stream, 2^10)
-    SpaceTokenizer(stream::T, initbuf::Int) where {T <: IO} = begin
+    SpaceTokenizer(stream::T, maxbuf::Int) where {T <: IO} = begin
         smallbuf = Array{UInt8,1}(_smallbuf_size)
         smallbuflen = readbytes!(stream, smallbuf, _smallbuf_size)
-        new{T}(stream, Array{UInt8,1}(initbuf), smallbuf, 1, smallbuflen)
+        new{T}(stream, Array{UInt8,1}(maxbuf), smallbuf, 1, smallbuflen)
     end
 end
 
@@ -56,8 +56,11 @@ end
         else
             curbuf += 1
             if curbuf > length(itr.buf)
-               resize!(itr.buf, 2*length(itr.buf)) 
-                #throw(ArgumentError("tokensize exceeded buffer"))
+                # 2017-09-19: Tried to have growing buffers, but it
+                # caused a 20-30% slowdown in the parsing. Crazy! I'll
+                # live with fixed sizes...
+                #resize!(itr.buf, 2*length(itr.buf))
+                throw(ArgumentError("tokensize exceeded buffer"))
             end
             itr.buf[curbuf] = itr.smallbuf[itr.smallbufpos] # save the current value
             itr.smallbufpos += 1
