@@ -1,5 +1,5 @@
 
-
+include("delims.jl")
 
 const _smallbuf_size = 256
 #@show _smallbuf_size
@@ -31,7 +31,8 @@ end
 @inline function _read_spaces(itr::SpaceTokenizer)
     #@show String(smallbuf), smallbufpos, smallbuflen
     @inbounds while itr.smallbuflen > 0
-        if isspacecode(itr.smallbuf[itr.smallbufpos])
+        #if isspacecode(itr.smallbuf[itr.smallbufpos])
+        if match(SpacesTabsNewlines, itr.smallbuf[itr.smallbufpos])
             itr.smallbufpos += 1 # move the position
             if itr.smallbufpos > itr.smallbuflen
                 # need to refill the buffer
@@ -51,7 +52,8 @@ end
 @inline function _buffer_nonspaces(itr)
     curbuf = 0
     @inbounds while itr.smallbuflen > 0
-        if isspacecode(itr.smallbuf[itr.smallbufpos])
+        #if isspacecode(itr.smallbuf[itr.smallbufpos])
+        if match(SpacesTabsNewlines, itr.smallbuf[itr.smallbufpos])
             break
         else
             curbuf += 1
