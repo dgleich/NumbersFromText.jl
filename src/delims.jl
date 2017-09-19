@@ -1,10 +1,10 @@
-abstract type DelimiterTypes end
+abstract type DelimiterCodes end
 
-immutable SpacesTabsNewlines <: DelimiterTypes end
-immutable CommasSpacesTabs <: DelimiterTypes end
-immutable SemicolonsSpacesTabs <: DelimiterTypes end
-immutable Newlines <: DelimiterTypes end
-immutable SpacesTabs <: DelimiterTypes end
+immutable SpacesTabsNewlines <: DelimiterCodes end
+immutable CommasSpacesTabs <: DelimiterCodes end
+immutable SemicolonsSpacesTabs <: DelimiterCodes end
+immutable Newlines <: DelimiterCodes end
+immutable SpacesTabs <: DelimiterCodes end
 
 @inline match(::Type{SpacesTabsNewlines}, c::UInt8) = c == UInt8(' ') || UInt8('\t') <= c <= UInt8('\r') || c == UInt8('\u85')
 @inline match(::Type{SpacesTabs}, c::UInt8) = c == UInt8(' ') || UInt8('\t')

@@ -4,18 +4,27 @@ include("delims.jl")
 const _smallbuf_size = 256
 #@show _smallbuf_size
 
-mutable struct SpaceTokenizer{T}
+""" SimpleTokenizer is a type to do fast tokenization of an input IO. """
+mutable struct SpaceTokenizer{T,S,R}
     io::T
     buf::Array{UInt8,1}
     smallbuf::Array{UInt8,1}
     smallbufpos::Int
     smallbuflen::Int
 
-    SpaceTokenizer(stream::T) where {T <: IO} = SpaceTokenizer(stream, 2^10)
-    SpaceTokenizer(stream::T, maxbuf::Int) where {T <: IO} = begin
+
+    SpaceTokenizer(stream::T) where {T <: IO} = SpaceTokenizer(stream, SpacesTabsNewlines)
+    SpaceTokenizer(stream::T, maxbuf::Int) where {T <: IO} = SpaceTokenizer(stream, SpacesTabsNewlines, SpacesTabsNewlines, maxbuf)
+    SpaceTokenizer(stream::T, ::Type{S}) where {T <: IO, S <: DelimiterCodes} = SpaceTokenizer(stream, S, S)
+    SpaceTokenizer(stream::T, ::Type{S}, ::Type{R}) where {
+      T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = SpaceTokenizer(stream, S, R, 2^10)
+
+    SpaceTokenizer(stream::T, ::Type{S}, ::Type{R}, maxbuf::Int) where {
+      T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = begin
         smallbuf = Array{UInt8,1}(_smallbuf_size)
         smallbuflen = readbytes!(stream, smallbuf, _smallbuf_size)
-        new{T}(stream, Array{UInt8,1}(maxbuf), smallbuf, 1, smallbuflen)
+        new{T,S,R}(
+          stream, Array{UInt8,1}(maxbuf), smallbuf, 1, smallbuflen)
     end
 end
 
@@ -76,7 +85,8 @@ end
     return curbuf
 end
 
-#@inline function record_sep(itr::SpaceTokenizer)
+#@inline function record_sep(itr::SpaceTokenizer{T,S,R}) where {T,S,R <: DelimiterCodes}
+#end
 
 @inline function step!(itr::SpaceTokenizer)
     # The step function has to read through spaces
