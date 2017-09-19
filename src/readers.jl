@@ -33,6 +33,12 @@ Documentation
     end
     push!(expr.args[2].args[2].args, expr_read)
   end
+  expr_record_check = quote
+    if find_record_seperator(toks) == false
+      throw(ArgumentError("Invalid record format"))
+    end
+  end
+  push!(expr.args[2].args[2].args, expr_record_check)
   #@show expr
   return expr
 end

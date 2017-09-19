@@ -85,8 +85,30 @@ end
     return curbuf
 end
 
-#@inline function record_sep(itr::SpaceTokenizer{T,S,R}) where {T,S,R <: DelimiterCodes}
-#end
+@inline function find_record_seperator(itr::SpaceTokenizer{T,S,R}) where {T,S,R <: DelimiterCodes}
+  @inbounds while itr.smallbuflen > 0
+      # it's important we check for the record sep first.
+      if match(R, itr.smallbuf[itr.smallbufpos])
+          itr.smallbufpos += 1 # move the position
+          if itr.smallbufpos > itr.smallbuflen
+              # need to refill the buffer
+              itr.smallbuflen = readbytes!(itr.io, itr.smallbuf, _smallbuf_size)
+              itr.smallbufpos = 1
+          end
+          return true
+      elseif match(S, itr.smallbuf[itr.smallbufpos])
+          itr.smallbufpos += 1 # move the position
+          if itr.smallbufpos > itr.smallbuflen
+              # need to refill the buffer
+              itr.smallbuflen = readbytes!(itr.io, itr.smallbuf, _smallbuf_size)
+              itr.smallbufpos = 1
+          end
+      else
+          return false
+      end
+  end
+  return itr.smallbuflen == 0 # We have an implied record sep at the end of file.
+end
 
 @inline function step!(itr::SpaceTokenizer)
     # The step function has to read through spaces
