@@ -13,11 +13,14 @@ mutable struct SpaceTokenizer{T,S,R}
     smallbuflen::Int
 
 
-    SpaceTokenizer(stream::T) where {T <: IO} = SpaceTokenizer(stream, SpacesTabsNewlines)
-    SpaceTokenizer(stream::T, maxbuf::Int) where {T <: IO} = SpaceTokenizer(stream, SpacesTabsNewlines, SpacesTabsNewlines, maxbuf)
-    SpaceTokenizer(stream::T, ::Type{S}) where {T <: IO, S <: DelimiterCodes} = SpaceTokenizer(stream, S, S)
+    SpaceTokenizer(stream::T) where {T <: IO} = SpaceTokenizer(stream, CommasSpacesTabsNewlines)
+    SpaceTokenizer(stream::T, maxbuf::Int) where {T <: IO} = SpaceTokenizer(
+          stream, CommasSpacesTabsNewlines, CommasSpacesTabsNewlines, maxbuf)
+    SpaceTokenizer(stream::T, ::Type{S}) where {
+          T <: IO, S <: DelimiterCodes} = SpaceTokenizer(stream, S, S)
     SpaceTokenizer(stream::T, ::Type{S}, ::Type{R}) where {
-      T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = SpaceTokenizer(stream, S, R, 2^10)
+          T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = SpaceTokenizer(
+          stream, S, R, 2^10)
 
     SpaceTokenizer(stream::T, ::Type{S}, ::Type{R}, maxbuf::Int) where {
       T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = begin
@@ -37,11 +40,12 @@ function reset(itr::SpaceTokenizer)
   itr.smallbufpos = 1
 end
 
-@inline function _read_spaces(itr::SpaceTokenizer)
+@inline function _read_spaces(itr::SpaceTokenizer{T,S,R}) where {T,S <: DelimiterCodes,R <: DelimiterCodes}
     #@show String(smallbuf), smallbufpos, smallbuflen
     @inbounds while itr.smallbuflen > 0
         #if isspacecode(itr.smallbuf[itr.smallbufpos])
-        if match(SpacesTabsNewlines, itr.smallbuf[itr.smallbufpos])
+        #if match(SpacesTabsNewlines, itr.smallbuf[itr.smallbufpos])
+        if match(S, itr.smallbuf[itr.smallbufpos])
             itr.smallbufpos += 1 # move the position
             if itr.smallbufpos > itr.smallbuflen
                 # need to refill the buffer
@@ -58,11 +62,15 @@ end
 #@inline _is_record_code(b::UInt8, itr::SpaceTokenizer{T,S,R}) = match(::Val{S}, b)
 #@inline _is_separator_code(b::UInt8, itr::SpaceTokenizer{T,S,R}) = match(::Val{S}, b)
 
-@inline function _buffer_nonspaces(itr)
+@inline _is_delim(S,R,b::UInt8) = match(S,b) || match(R,b)
+
+@inline function _buffer_nonspaces(itr::SpaceTokenizer{T,S,R}) where {T,S,R <: DelimiterCodes}
     curbuf = 0
     @inbounds while itr.smallbuflen > 0
         #if isspacecode(itr.smallbuf[itr.smallbufpos])
-        if match(SpacesTabsNewlines, itr.smallbuf[itr.smallbufpos])
+        #if match(S, itr.smallbuf[itr.smallbufpos]) || match(R, itr.smallbuf[itr.smallbufpos])
+        #if match(SpacesTabsNewlines, itr.smallbuf[itr.smallbufpos])
+        if _is_delim(S,R,itr.smallbuf[itr.smallbufpos])
             break
         else
             curbuf += 1

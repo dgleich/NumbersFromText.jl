@@ -65,7 +65,7 @@ Vector{Float64}([3.0, 4.0, 5.0, 6.0, -1.0, 1.0e18, -1.0e18, 1.234123412341235123
   a = readarray(array_int_float_filename)
   @test a == vec(hcat(array_int_float_contents...)')
 
-
+  @test readarray(IOBuffer(b"5,6")) == [5.0,6.0]
 end
 
 @testset "readarrays" begin
