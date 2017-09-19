@@ -5,15 +5,22 @@ Documentation
 """
 :readarrays, :readarrays!
 
-@generated function readarrays!(toks::SpaceTokenizer, as...)
+@generated function readarrays!(rval::Type{Val{T}}, toks::SpaceTokenizer, as...) where {T}
   N = length(as)
   Ts = map(eltype, as)
+
+  @show rval
 
   # the basic loop is simple, we just keep reading!
   expr = quote
     while true
     end
-    return as
+  end
+
+  if T
+    push!(expr.args,:(return as))
+  else
+    push!(expr.args,:(return))
   end
 
   for i=1:length(as)
@@ -26,7 +33,12 @@ Documentation
     end
     push!(expr.args[2].args[2].args, expr_read)
   end
+  @show expr
   return expr
+end
+
+function readarrays!(toks::SpaceTokenizer, as...)
+  return readarrays!(Val{true}, toks, as...)
 end
 
 function readarrays!(io, as...; maxbuf=_default_maxbuf_size)

@@ -148,14 +148,14 @@ function readarrays!(::Type{Val{true}}, io, as...;
     end
 
     nvalid = partition_buffer(buf, buflen, nthreads, bufs, delim)
-    for i=1:nvalid
+    Threads.@threads for i=1:nvalid
       reset(toks[i]) # reset the tokenizer
       foreach(x -> resize!(x, 0), par_as[i]) # reset each thread's info
       readarrays!(toks[i], par_as[i]...)
     end
     for j=1:length(as)
       for i=1:nvalid
-        myappend!(as[j], par_as[i][j])
+        append!(as[j], par_as[i][j])
       end
     end
   end
