@@ -47,8 +47,13 @@ function readarrays!(toks::SpaceTokenizer, as...)
   return readarrays!(Val{true}, toks, as...)
 end
 
-function readarrays!(io, as...; maxbuf=_default_maxbuf_size)
-  toks = SpaceTokenizer(io, maxbuf)
+function readarrays!(io, as...;
+    maxbuf=_default_maxbuf_size,
+    seperators::Type{S}=CommasSpacesTabsNewlines,
+    records::Type{R}=CommasSpacesTabsNewlines) where {
+    S <: DelimiterCodes, R <: DelimiterCodes
+    }
+  toks = SpaceTokenizer(io, S, R, maxbuf)
   return readarrays!(toks, as...)
 end
 

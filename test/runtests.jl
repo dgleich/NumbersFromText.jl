@@ -4,7 +4,13 @@ using Base.Test
 dir = joinpath(dirname(@__FILE__),"test_files/")
 
 @testset "SpaceTokenizer" begin
+  begin
+    buf = IOBuffer(b"5\n6\n")
+    toks = SpaceTokenizer(buf, Spaces, Newlines)
+    @show curlen = NumbersFromText.step!(toks)
+    @test String(toks.buf[1:curlen]) == "5"
 
+  end
 end
 
 array_int_float_filename = joinpath(dir, "arrays_int_float.txt")
@@ -66,6 +72,8 @@ Vector{Float64}([3.0, 4.0, 5.0, 6.0, -1.0, 1.0e18, -1.0e18, 1.234123412341235123
   @test a == vec(hcat(array_int_float_contents...)')
 
   @test readarray(IOBuffer(b"5,6")) == [5.0,6.0]
+
+  @test readarray(IOBuffer(b"5\n6\n"); seperators=Spaces, records=Newlines) == [5.0, 6.0]
 end
 
 @testset "readarrays" begin
