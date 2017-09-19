@@ -126,7 +126,7 @@ const _default_delimzone=10
 @show Threads.nthreads()
 
 # read in parallel
-function readarrays!(::Type{Val{true}}, io, as...;
+function parallel_readarrays!(io, as...;
   maxbuf::Int=_default_maxbuf_size, parbuf::Int=_default_parbuf_size,
   nthreads::Int = Threads.nthreads(), delim::UInt8=UInt8('\n'),
   delimzone::Int=_default_delimzone)
@@ -163,8 +163,3 @@ function readarrays!(::Type{Val{true}}, io, as...;
   return as
 end
 
-function myappend!(out::AbstractArray{T}, in::AbstractArray{T}) where T
-  for k in in
-    push!(out, k)
-  end
-end

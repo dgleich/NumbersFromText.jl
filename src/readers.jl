@@ -9,7 +9,7 @@ Documentation
   N = length(as)
   Ts = map(eltype, as)
 
-  @show rval
+  #@show rval
 
   # the basic loop is simple, we just keep reading!
   expr = quote
@@ -33,7 +33,7 @@ Documentation
     end
     push!(expr.args[2].args[2].args, expr_read)
   end
-  @show expr
+  #@show expr
   return expr
 end
 
