@@ -5,7 +5,7 @@ const _smallbuf_size = 256
 #@show _smallbuf_size
 
 """ SimpleTokenizer is a type to do fast tokenization of an input IO. """
-mutable struct SpaceTokenizer{T,S,R}
+mutable struct SimpleTokenizer{T,S,R}
     io::T
     buf::Array{UInt8,1}
     smallbuf::Array{UInt8,1}
@@ -13,16 +13,16 @@ mutable struct SpaceTokenizer{T,S,R}
     smallbuflen::Int
 
 
-    SpaceTokenizer(stream::T) where {T <: IO} = SpaceTokenizer(stream, CommasSpacesTabsNewlines)
-    SpaceTokenizer(stream::T, maxbuf::Int) where {T <: IO} = SpaceTokenizer(
+    SimpleTokenizer(stream::T) where {T <: IO} = SimpleTokenizer(stream, CommasSpacesTabsNewlines)
+    SimpleTokenizer(stream::T, maxbuf::Int) where {T <: IO} = SimpleTokenizer(
           stream, CommasSpacesTabsNewlines, CommasSpacesTabsNewlines, maxbuf)
-    SpaceTokenizer(stream::T, ::Type{S}) where {
-          T <: IO, S <: DelimiterCodes} = SpaceTokenizer(stream, S, S)
-    SpaceTokenizer(stream::T, ::Type{S}, ::Type{R}) where {
-          T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = SpaceTokenizer(
+    SimpleTokenizer(stream::T, ::Type{S}) where {
+          T <: IO, S <: DelimiterCodes} = SimpleTokenizer(stream, S, S)
+    SimpleTokenizer(stream::T, ::Type{S}, ::Type{R}) where {
+          T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = SimpleTokenizer(
           stream, S, R, 2^10)
 
-    SpaceTokenizer(stream::T, ::Type{S}, ::Type{R}, maxbuf::Int) where {
+    SimpleTokenizer(stream::T, ::Type{S}, ::Type{R}, maxbuf::Int) where {
       T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = begin
         smallbuf = Array{UInt8,1}(_smallbuf_size)
         smallbuflen = readbytes!(stream, smallbuf, _smallbuf_size)
@@ -35,12 +35,12 @@ end
 This could be executed after the underyling IOBuffer has been
 reset.
 """
-function reset(itr::SpaceTokenizer)
+function reset(itr::SimpleTokenizer)
   itr.smallbuflen = readbytes!(itr.io, itr.smallbuf, _smallbuf_size)
   itr.smallbufpos = 1
 end
 
-@inline function _read_spaces(itr::SpaceTokenizer{T,S,R}) where {T,S <: DelimiterCodes,R <: DelimiterCodes}
+@inline function _read_spaces(itr::SimpleTokenizer{T,S,R}) where {T,S <: DelimiterCodes,R <: DelimiterCodes}
     #@show String(smallbuf), smallbufpos, smallbuflen
     @inbounds while itr.smallbuflen > 0
         #if isspacecode(itr.smallbuf[itr.smallbufpos])
@@ -59,12 +59,12 @@ end
     return itr.smallbuflen > 0
 end
 
-#@inline _is_record_code(b::UInt8, itr::SpaceTokenizer{T,S,R}) = match(::Val{S}, b)
-#@inline _is_separator_code(b::UInt8, itr::SpaceTokenizer{T,S,R}) = match(::Val{S}, b)
+#@inline _is_record_code(b::UInt8, itr::SimpleTokenizer{T,S,R}) = match(::Val{S}, b)
+#@inline _is_separator_code(b::UInt8, itr::SimpleTokenizer{T,S,R}) = match(::Val{S}, b)
 
 @inline _is_delim(S,R,b::UInt8) = match(S,b) || match(R,b)
 
-@inline function _buffer_nonspaces(itr::SpaceTokenizer{T,S,R}) where {T,S,R <: DelimiterCodes}
+@inline function _buffer_nonspaces(itr::SimpleTokenizer{T,S,R}) where {T,S,R <: DelimiterCodes}
     curbuf = 0
     @inbounds while itr.smallbuflen > 0
         #if isspacecode(itr.smallbuf[itr.smallbufpos])
@@ -93,7 +93,7 @@ end
     return curbuf
 end
 
-@inline function find_record_seperator(itr::SpaceTokenizer{T,S,R}) where {T,S,R <: DelimiterCodes}
+@inline function find_record_seperator(itr::SimpleTokenizer{T,S,R}) where {T,S,R <: DelimiterCodes}
   @inbounds while itr.smallbuflen > 0
       # it's important we check for the record sep first.
       if match(R, itr.smallbuf[itr.smallbufpos])
@@ -118,7 +118,7 @@ end
   return itr.smallbuflen == 0 # We have an implied record sep at the end of file.
 end
 
-@inline function step!(itr::SpaceTokenizer)
+@inline function step!(itr::SimpleTokenizer)
     # The step function has to read through spaces
     # then store non-spaces into buf
     # Then read through the rest of the spaces
@@ -129,11 +129,11 @@ end
     end
 end
 
-@inline function end_of_stream(itr::SpaceTokenizer)
+@inline function end_of_stream(itr::SimpleTokenizer)
     return itr.smallbuflen == 0
 end
 
-@inline function next(::Type{T}, itr::SpaceTokenizer) where {T <: Union{Float16,Float32,Float64,Integer}}
+@inline function next(::Type{T}, itr::SimpleTokenizer) where {T <: Union{Float16,Float32,Float64,Integer}}
     if (curlen = step!(itr)) == -1
         return zero(T)
     else

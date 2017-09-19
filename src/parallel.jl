@@ -136,7 +136,7 @@ function parallel_readarrays!(io, as...;
   # allocate buffers and tokenizers for each thread,
   # as well as sub-arrays
   bufs = allocate_buffers(nthreads)
-  toks = map(x -> SpaceTokenizer(x, maxbuf), bufs) # create the tokenizers
+  toks = map(x -> SimpleTokenizer(x, maxbuf), bufs) # create the tokenizers
   par_as = map(_ -> map(x -> zeros(eltype(x), 0), as), 1:nthreads) # create the arrays
 
   buf::Vector{UInt8} = Vector{UInt8}(2*parbuf)
@@ -162,4 +162,3 @@ function parallel_readarrays!(io, as...;
 
   return as
 end
-

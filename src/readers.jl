@@ -5,7 +5,7 @@ Documentation
 """
 :readarrays, :readarrays!
 
-@generated function readarrays!(rval::Type{Val{T}}, toks::SpaceTokenizer, as...) where {T}
+@generated function readarrays!(rval::Type{Val{T}}, toks::SimpleTokenizer, as...) where {T}
   N = length(as)
   Ts = map(eltype, as)
 
@@ -43,7 +43,7 @@ Documentation
   return expr
 end
 
-function readarrays!(toks::SpaceTokenizer, as...)
+function readarrays!(toks::SimpleTokenizer, as...)
   return readarrays!(Val{true}, toks, as...)
 end
 
@@ -53,7 +53,7 @@ function readarrays!(io, as...;
     records::Type{R}=CommasSpacesTabsNewlines) where {
     S <: DelimiterCodes, R <: DelimiterCodes
     }
-  toks = SpaceTokenizer(io, S, R, maxbuf)
+  toks = SimpleTokenizer(io, S, R, maxbuf)
   return readarrays!(toks, as...)
 end
 

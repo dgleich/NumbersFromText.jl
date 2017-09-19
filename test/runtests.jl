@@ -3,10 +3,10 @@ using Base.Test
 
 dir = joinpath(dirname(@__FILE__),"test_files/")
 
-@testset "SpaceTokenizer" begin
+@testset "SimpleTokenizer" begin
   begin
     buf = IOBuffer(b"5\n6\n")
-    toks = SpaceTokenizer(buf, Spaces, Newlines)
+    toks = SimpleTokenizer(buf, Spaces, Newlines)
     @show curlen = NumbersFromText.step!(toks)
     @test String(toks.buf[1:curlen]) == "5"
 
