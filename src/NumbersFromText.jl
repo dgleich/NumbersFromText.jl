@@ -2,7 +2,7 @@ module NumbersFromText
 
 include("myparse.jl") # updates to parsing routines to work with Array{UInt8}
 
-include("spacetokenizer.jl")
+include("simpletokenizer.jl")
 export SimpleTokenizer, DelimiterCodes
 
 include("readers.jl")
