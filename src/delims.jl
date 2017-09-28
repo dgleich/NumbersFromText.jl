@@ -7,7 +7,7 @@ struct Newlines <: DelimiterCodes end
 @inline match(::Type{Newlines}, c::UInt8) = UInt8('\t') < c <= UInt8('\r') || c == UInt8('\u85')
 
 struct SpacesTabs <: DelimiterCodes end
-@inline match(::Type{SpacesTabs}, c::UInt8) = c == UInt8(' ') || UInt8('\t')
+@inline match(::Type{SpacesTabs}, c::UInt8) = c == UInt8(' ') || c == UInt8('\t')
 
 struct SpacesTabsNewlines <: DelimiterCodes end
 @inline match(::Type{SpacesTabsNewlines}, c::UInt8) = c == UInt8(' ') || UInt8('\t') <= c <= UInt8('\r') || c == UInt8('\u85')

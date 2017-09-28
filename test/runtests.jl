@@ -3,13 +3,47 @@ using Base.Test
 
 dir = joinpath(dirname(@__FILE__),"test_files/")
 
+@testset "Examples" begin
+  @testset "SimpleTokenizer" begin
+    io = IOBuffer(b"1 56,3.0\t2.0\n4 ")
+    toks = SimpleTokenizer(io)
+    @test 1 == NumbersFromText.next(Int, toks)
+    @test 56 == NumbersFromText.next(Int, toks)
+    curlen = NumbersFromText.step!(toks) # return the length of the next token
+    @test 3 == curlen
+    @test 3.0 == parse(Float64, String(toks.buf[1:curlen]))
+    @test 2.0 == NumbersFromText.next(Float64, toks) # this is a simple way to do that!
+    # the next line reads until a new token, but checks for record separators
+    @test true == NumbersFromText.find_record_seperator(toks)
+    @test 4.0 == NumbersFromText.next(Float64, toks) # you can parse Ints as Floats
+    @test false == NumbersFromText.end_of_stream(toks) # not at EOS yet, because of space
+    @test 0.0 == NumbersFromText.next(Float64, toks) # if you parse too far, you get 0
+    # a better strategy is to use curlen and step!, because curlen == -1 if
+    # you are at the end of the stream.
+    @test -1 == NumbersFromText.step!(toks)
+    @test true == NumbersFromText.end_of_stream(toks)
+
+    io = IOBuffer(b"1\t56\t3.0\n2.0\n4")
+    # separators are spaces or tabs, records are newlines.
+    toks = SimpleTokenizer(io, SpacesTabs, Newlines)
+    @test false == NumbersFromText.find_record_seperator(toks)
+    @test 1 == NumbersFromText.next(Int, toks)
+    @test false == NumbersFromText.find_record_seperator(toks)
+    @test 56 == NumbersFromText.next(Int, toks)
+    @test false == NumbersFromText.find_record_seperator(toks)
+    @test 3.0 ==  NumbersFromText.next(Float64, toks)
+    @test true == NumbersFromText.find_record_seperator(toks)
+    @test 2.0 == NumbersFromText.next(Float64, toks)
+  end
+
+end
+
 @testset "SimpleTokenizer" begin
   begin
     buf = IOBuffer(b"5\n6\n")
     toks = SimpleTokenizer(buf, Spaces, Newlines)
-    @show curlen = NumbersFromText.step!(toks)
+    curlen = NumbersFromText.step!(toks)
     @test String(toks.buf[1:curlen]) == "5"
-
   end
 end
 
