@@ -47,6 +47,36 @@ end
   end
 end
 
+@testset "myparse" begin
+  @testset "Integers" begin
+    @test 1234 == NumbersFromText.myparse(Int64, b"+1234")
+    @test -1234 == NumbersFromText.myparse(Int64, b"-1234")
+    @test 1234 == NumbersFromText.myparse(Int32, b"+1234")
+    @test -1234 == NumbersFromText.myparse(Int32, b"-1234")
+    @test 1234 == NumbersFromText.myparse(Int16, b"+1234")
+    @test -1234 == NumbersFromText.myparse(Int16, b"-1234")
+
+    @test_throws ArgumentError NumbersFromText.myparse(Int16, b"1234567")
+    @test_throws ArgumentError NumbersFromText.myparse(Int32, b"123456790123456")
+    @test_throws ArgumentError NumbersFromText.myparse(Int64, b"12345679012345678901234567890")
+
+    @test_throws ArgumentError NumbersFromText.myparse(Int64, b" 1234 ")
+    @test_throws ArgumentError NumbersFromText.myparse(Int64, b" 1234")
+    @test_throws ArgumentError NumbersFromText.myparse(Int64, b"1234 ")
+  end
+
+  @testset "bool" begin
+    @test false == NumbersFromText.myparse(Bool, b"0")
+    @test true == NumbersFromText.myparse(Bool, b"1")
+  end  
+
+  @testset "Floats" begin
+    @test eps(Float64)== NumbersFromText.myparse(Float64, b"2.220446049250313e-16")
+    @test nextfloat(0.0)== NumbersFromText.myparse(Float64, b"5.0e-324")
+    @test eps(Float32) ==NumbersFromText.myparse(Float32, b"1.1920928955078125e-7")
+  end
+end
+
 array_int_float_filename = joinpath(dir, "arrays_int_float.txt")
 array_int_float_contents = Any[
 Vector{Int}([1 , 2 , 3 , 4 , 5 , 6 , -1, -2]),
