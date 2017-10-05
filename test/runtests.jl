@@ -63,12 +63,14 @@ end
     @test_throws ArgumentError NumbersFromText.myparse(Int64, b" 1234 ")
     @test_throws ArgumentError NumbersFromText.myparse(Int64, b" 1234")
     @test_throws ArgumentError NumbersFromText.myparse(Int64, b"1234 ")
+
+    @test_throws ArgumentError NumbersFromText.myparse(UInt64, b"-1234")
   end
 
   @testset "bool" begin
     @test false == NumbersFromText.myparse(Bool, b"0")
     @test true == NumbersFromText.myparse(Bool, b"1")
-  end  
+  end
 
   @testset "Floats" begin
     @test eps(Float64)== NumbersFromText.myparse(Float64, b"2.220446049250313e-16")

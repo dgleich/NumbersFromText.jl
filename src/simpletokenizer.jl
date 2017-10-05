@@ -10,7 +10,11 @@ Simple is a type to do fast tokenization of an raw Julia `io` type.
 The type of tokenization is extremely primitive, but flexible enough for many
 simple files. (See NumbersFromText `examples.jl`.)
 
+Given the byte-string b"1\n 8\t 9.0, 2" with the default options, the
+SimpleTokenizer class will separate out the numbers from the spaces and commas.
+It can either return the next number token, which is obtained by calling
 
+### The high level idea
 
 The idea is that a file is a set of tokens separated by Separtor codes or
 RecordSeparator codes. RecordSeparators that you can detect if you wish to
@@ -27,7 +31,6 @@ be a newline character, whereas tokens are delimited by spaces or tabs.
 Separators and RecordSeparators are always of type DelimiterCodes.
 Values can include Spaces, SpacesTabs, Newlines, CommasSpacesTabs. The full
 list is viewable with `subtypes(DelimiterCodes)``
-
 
 ### Example 1: Simple Tokenizer
     io = IOBuffer(b"1 56,3.0\t2.0\n4 ")
