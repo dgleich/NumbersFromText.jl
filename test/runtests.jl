@@ -76,6 +76,30 @@ end
     @test eps(Float64)== NumbersFromText.myparse(Float64, b"2.220446049250313e-16")
     @test nextfloat(0.0)== NumbersFromText.myparse(Float64, b"5.0e-324")
     @test eps(Float32) ==NumbersFromText.myparse(Float32, b"1.1920928955078125e-7")
+    @test prevfloat(Inf) == NumbersFromText.myparse(Float64, b"1.7976931348623157e308")
+    @test realmin(Float64) == NumbersFromText.myparse(Float64, b"2.2250738585072014e-308")
+    @test Inf == NumbersFromText.myparse(Float64, b"Inf")
+    @test Inf == NumbersFromText.myparse(Float64, b"+Infinity")
+    @test -Inf == NumbersFromText.myparse(Float64, b"-inf")
+    @test -Inf == NumbersFromText.myparse(Float64, b"-infinity")
+    @test isnan(NumbersFromText.myparse(Float64, b"Nan"))
+    @test isnan( NumbersFromText.myparse(Float64, b"nan"))
+    @test isnan(NumbersFromText.myparse(Float64, b"NaN"))
+    @test isnan(NumbersFromText.myparse(Float64, b"NaN(5)"))
+    @test isnan(NumbersFromText.myparse(Float64, b"-NaN(5)"))
+    @test isnan(NumbersFromText.myparse(Float64, b"+NaN(5)"))
+    @test 0.3366599143757278 == NumbersFromText.myparse(Float64, b"0.3366599143757278")
+    @test -0.5900190058373408 == NumbersFromText.myparse(Float64, b"-0.5900190058373408")
+    @test -0.19043382659933977 == NumbersFromText.myparse(Float64, b"-0.19043382659933977")
+    @test -0.16827871837317745 == NumbersFromText.myparse(Float64, b"-0.16827871837317745")
+
+    for i=1:10
+      x = randn()
+      buf = IOBuffer()
+      print(buf, x)
+      s = readavailable(seek(buf, 0))
+      @test x == NumbersFromText.myparse(Float64, s)
+    end
   end
 end
 

@@ -13,6 +13,7 @@ function myparse(::Type{T}, a::Vector{UInt8}, start::Integer, len::Integer) wher
   n::T = zero(T)
   s::T = one(T)
   if a[1] == UInt8('-')
+    (T <: Unsigned) && throw(ArgumentError("$(String(a[start:len])) is not a valid unsigned integer"))
     s = -s
     i += 1
   elseif a[1] == UInt8('+')
@@ -56,22 +57,13 @@ function myparse(::Type{T}, a::Vector{UInt8}, start::Integer, len::Integer) wher
   return n
 end
 
+#=
 @inline tryparse(::Type{Float64}, s::Vector{UInt8}, pos::Int64, len::Int64) =
             ccall(:jl_try_substrtod, Nullable{Float64}, (Ptr{UInt8},Csize_t,Csize_t), s, pos, len)
 @inline tryparse(::Type{Float32}, s::Vector{UInt8}, pos::Int64, len::Int64) =
             ccall(:jl_try_substrtof, Nullable{Float32}, (Ptr{UInt8},Csize_t,Csize_t), s, pos, len)
 
-#=
-if VERSION < v"0.6"
-    @inline function myparse(::Type{Float64}, s::Vector{UInt8}, pos::Int64, last::Int64)
-        result = tryparse(Float64, s, pos-1, last-pos+1)
-        if isnull(result)
-            throw(ArgumentError("cannot parse $(repr(s)) as $Float64"))
-        end
-        return result.value
-    end
-else
-=#
+
 @inline function myparse(::Type{T}, s::Vector{UInt8}, pos::Int64, last::Int64) where {
             T<:Union{Float32,Float64}}
     result = tryparse(T, s, pos-1, last-pos+1)
@@ -83,6 +75,18 @@ end
 
 myparse(::Type{Float16}, s::Vector{UInt8}, pos::Int64, last::Int64) =
   convert(myparse(Float32, s, pos, last))
+=#
+
+include("parse-float.jl")
+
+@inline function myparse(::Type{T}, s::Vector{UInt8}, pos::Int64, last::Int64) where {
+            T<:Union{Float32,Float64}}
+
+    return convert(T, parse_float(Float64, s, pos, last))
+
+end
+
+
 
 ParsableNumbers = Union{Float16,Float32,Float64,Integer}
 myparse(::Type{T}, a::Vector{UInt8}) where {T <: ParsableNumbers}  = myparse(T, a, 1, length(a))
