@@ -162,3 +162,66 @@ function parallel_readarrays!(io, as...;
 
   return as
 end
+
+
+#=
+New design, this one really can only take advantage of a small
+number of threads because we are dominated by the reading time
+because we cannot seek for things like gzipped streams. We should
+be able to increase this a little bit
+
+# read in parallel
+function parallel_readarrays!(io, as...;
+  maxbuf::Int=_default_maxbuf_size, parbuf::Int=_default_parbuf_size,
+  nthreads::Int = Threads.nthreads(), delim::UInt8=UInt8('\n'),
+  delimzone::Int=_default_delimzone)
+
+  delim_search::Int = delimzone*parbuf
+
+  # allocate buffers and tokenizers for each thread,
+  # as well as sub-arrays
+  bufs_A = allocate_buffers(nthreads)
+  bufs_B = allocate_buffers(nthreads)
+  toks_A = map(x -> SimpleTokenizer(x, maxbuf), bufs) # create the tokenizers
+  toks_B = map(x -> SimpleTokenizer(x, maxbuf), bufs) # create the tokenizers
+
+  par_as_A = map(_ -> map(x -> zeros(eltype(x), 0), as), 1:nthreads) # create the arrays
+  par_as_B = map(_ -> map(x -> zeros(eltype(x), 0), as), 1:nthreads) # create the arrays
+
+  buf::Vector{UInt8} = Vector{UInt8}(2*parbuf)
+
+  load_bufs(buf
+
+  while true
+    parallel_read_loop(
+      bufs_A,
+      par_as_A,
+      toks_A,
+      par_as_B,
+    )
+    parallel_read_loop(
+      bufs_B,
+      par_as
+    )
+    buflen = buffer_to_delim(buf, io, parbuf, delim_search+parbuf, delim)
+    if buflen == 0
+      break
+    end
+
+    nvalid = partition_buffer(buf, buflen, nthreads, bufs, delim)
+    Threads.@threads for i=1:nvalid
+      reset(toks[i]) # reset the tokenizer
+      foreach(x -> resize!(x, 0), par_as[i]) # reset each thread's info
+      readarrays!(toks[i], par_as[i]...)
+    end
+    for j=1:length(as)
+      for i=1:nvalid
+        append!(as[j], par_as[i][j])
+      end
+    end
+  end
+
+  return as
+end
+
+=#
