@@ -1,5 +1,7 @@
 module NumbersFromText
 
+const ByteData = Union{Vector{UInt8},Base.CodeUnits{UInt8}}
+
 include("myparse.jl") # updates to parsing routines to work with Array{UInt8}
 
 include("simpletokenizer.jl")

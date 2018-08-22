@@ -1,5 +1,5 @@
 using NumbersFromText
-using Base.Test
+using Test
 
 dir = joinpath(dirname(@__FILE__),"test_files/")
 
@@ -77,7 +77,7 @@ end
     @test nextfloat(0.0)== NumbersFromText.myparse(Float64, b"5.0e-324")
     @test eps(Float32) ==NumbersFromText.myparse(Float32, b"1.1920928955078125e-7")
     @test prevfloat(Inf) == NumbersFromText.myparse(Float64, b"1.7976931348623157e308")
-    @test realmin(Float64) == NumbersFromText.myparse(Float64, b"2.2250738585072014e-308")
+    @test floatmin(Float64) == NumbersFromText.myparse(Float64, b"2.2250738585072014e-308")
     @test Inf == NumbersFromText.myparse(Float64, b"Inf")
     @test Inf == NumbersFromText.myparse(Float64, b"+Infinity")
     @test -Inf == NumbersFromText.myparse(Float64, b"-inf")
@@ -120,7 +120,7 @@ Vector{Float64}([3.0, 4.0, 5.0, 6.0, -1.0, 1.0e18, -1.0e18, 1.234123412341235123
   a = readarray!(buf, zeros(0))
   @test a == data
 
-  data = convert(Array{UInt8}, "1.0"*("0"^2048)*"      2.0")
+  data = Array{UInt8}("1.0"*("0"^2048)*"      2.0")
   buf = IOBuffer(data)
   @test_throws ArgumentError readarray(buf)
   seek(buf,0)
@@ -187,7 +187,7 @@ end
   @test a2 == data2
 
 
-  data = convert(Array{UInt8}, "1.0"*("0"^2048)*"      2.0")
+  data = Array{UInt8}("1.0"*("0"^2048)*"      2.0")
   buf = IOBuffer(data)
   @test_throws ArgumentError readarrays(buf, Float64)
   seek(buf,0)
@@ -203,6 +203,7 @@ end
 
 
 @testset "readmatrix" begin
+  using DelimitedFiles
   data = randn(3,2)
   buf = IOBuffer()
   writedlm(buf, data, "\t ")
@@ -214,17 +215,17 @@ end
   a = readmatrix(buf)
   @test a == ones(1,1)
 
-  data = convert(Array{UInt8}, "1.0"*("0"^2048))
+  data = Array{UInt8}("1.0"*("0"^2048))
   buf = IOBuffer(data)
   @test_throws ArgumentError a = readmatrix(buf)
 
 
-  data = convert(Array{UInt8}, "1.0 1.0\n1.0"*("0"^2048)*"      2.0")
+  data = Array{UInt8}("1.0 1.0\n1.0"*("0"^2048)*"      2.0")
   buf = IOBuffer(data)
   a = readmatrix(buf; maxbuf = 2052)
   @test a == [1.0 1.0; 1.0 2.0]
 
-  data = convert(Array{UInt8}, "1.0 1.0\n1.0"*("0"^2048)*"      2.0")
+  data = Array{UInt8}("1.0 1.0\n1.0"*("0"^2048)*"      2.0")
   buf = IOBuffer(data)
   a = readmatrix(buf; maxbuf = 2052, transpose=false)
   @test a == [1.0 1.0; 1.0 2.0]'

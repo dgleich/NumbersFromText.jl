@@ -1,0 +1,14 @@
+authors = ["David Gleich <dgleich@purdue.edu>"]
+name = "NumbersFromText"
+uuid = "b19605a2-a591-11e8-0916-710a434a2602"
+version = "0.1.0"
+
+[deps]
+DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+
+[targets]
+test = ["Test", "DelimitedFiles"]

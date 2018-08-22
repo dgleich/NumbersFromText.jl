@@ -32,9 +32,9 @@ function _search_for_break(buf::Array{UInt8}, len::Integer, start::Integer, deli
 end
 
 function allocate_buffers(n::Integer)
-  bufs = Vector{SimpleIOBuffer}(n)
+  bufs = Vector{SimpleIOBuffer}(undef, n)
   for i=1:n
-    bufs[i] = IOBuffer(b"", true, false)
+    bufs[i] = IOBuffer(Vector{UInt8}(), read=true, write=false)
   end
   return bufs
 end
@@ -80,7 +80,7 @@ function partition_buffer(buf::Vector{UInt8}, len::Integer,
     end
   end
 
-  assert(nbufs <= n)
+  @assert(nbufs <= n,"Insufficient buffers")
 
   return nbufs
 end

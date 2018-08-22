@@ -1,23 +1,23 @@
-using DoubleDouble
+using DoubleFloats
 @inline function convert_to_double(f1::Int64, exp::Int)
   f = Float64(f1)
   r = f1 - Int64(f) # get the remainder
-  x = Double{Float64}(f) + Double{Float64}(r)
+  x = Double64(f) + Double64(r)
   #@show x
 
   maxexp = 308
   minexp = -256
 
   if exp >= 0
-    x *= Double{Float64}(10.0)^(exp)
+    x *= Double64(10.0)^(exp)
   else
     if exp < minexp # not sure why this is a good choice, but it seems to be!
-      x /= Double{Float64}(10.0)^(-minexp)
+      x /= Double64(10.0)^(-minexp)
       #@show x
-      x /= Double{Float64}(10.0)^(-exp + minexp)
+      x /= Double64(10.0)^(-exp + minexp)
       #@show x
     else
-      x /= Double{Float64}(10.0)^(-exp)
+      x /= Double64(10.0)^(-exp)
     end
     #@show x
   end
@@ -28,14 +28,13 @@ strings of the same length. Then checks against an input string.
 This is used for fast case-insesntive fixed-string comparison
   to get the "inf" and "nan" parsing in our fast parser
 
-
 function fname(s::Array{UInt8}, start::Int, len::Int)
   return true if the prefix of s is equal to s1e or s2e
 
 """
 macro check_string(fname, s1e, s2e)
   fbody = quote
-    @inline @inbounds function $fname(s::Array{UInt8}, start::Int, len::Int)
+    @inline @inbounds function $fname(s::ByteData, start::Int, len::Int)
       return false
     end
   end
@@ -56,7 +55,7 @@ macro check_string(fname, s1e, s2e)
   end
   push!(checks.args[2].args[2].args, :(return true))
   #@show checks
-  insert!(fbody.args[2].args[2].args[2].args[2].args, 1, checks)
+  insert!(fbody.args[2].args[3].args[3].args[2].args, 1, checks)
   #@show fbody
   #@show fbody.args[2].args[2].args
 
@@ -78,7 +77,7 @@ we don't have to worry about those digits.
 Also, we take as input an initial value of the number, so we can accumulate
 across the decimal point.
 """
-@inline function parse_uint_and_stop(a::Vector{UInt8}, start::Integer, len::Integer, n::T) where {T <: Integer}
+@inline function parse_uint_and_stop(a::ByteData, start::Integer, len::Integer, n::T) where {T <: Integer}
   i = start
   # specialize handling of the first digit so we can return an error
   max_without_overflow = div(typemax(T)-9,10) # the larg
@@ -101,7 +100,7 @@ across the decimal point.
   return i, true, n
 end
 
-@inline function read_digits(a::Vector{UInt8}, i::Integer, len::Integer)
+@inline function read_digits(a::ByteData, i::Integer, len::Integer)
   # slurp up extra digits
   while i <= len
     if !_isdigit(a[i]) # do nothing
@@ -117,7 +116,7 @@ end
 # http://www.boost.org/doc/libs/1_65_0/boost/spirit/home/qi/numeric/detail/real_impl.hpp
 # http://www.boost.org/doc/libs/1_65_0/boost/spirit/home/qi/numeric/real_policies.hpp
 # http://www.boost.org/doc/libs/1_65_0/boost/spirit/home/qi/numeric/numeric_utils.hpp
-@inline function parse_float(::Type{T}, s::Vector{UInt8},
+@inline function parse_float(::Type{T}, s::ByteData,
     start::Int64, len::Int64) where {T <: Union{Float32,Float64}}
 
   i = start

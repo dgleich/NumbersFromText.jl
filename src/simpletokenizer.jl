@@ -83,10 +83,10 @@ mutable struct SimpleTokenizer{T,S,R}
 
     SimpleTokenizer(stream::T, ::Type{S}, ::Type{R}, maxbuf::Int) where {
       T <: IO, S <: DelimiterCodes, R <: DelimiterCodes} = begin
-        smallbuf = Array{UInt8,1}(_smallbuf_size)
+        smallbuf = Array{UInt8,1}(undef, _smallbuf_size)
         smallbuflen = readbytes!(stream, smallbuf, _smallbuf_size)
         new{T,S,R}(
-          stream, Array{UInt8,1}(maxbuf), smallbuf, 1, smallbuflen)
+          stream, Array{UInt8,1}(undef, maxbuf), smallbuf, 1, smallbuflen)
     end
 end
 

@@ -6,9 +6,9 @@
 # Will delete soon!
 
 import Base.Checked: add_with_overflow, mul_with_overflow
-import Base.next
+#import Base.next
 
-function myparse(::Type{T}, a::Vector{UInt8}, start::Integer, len::Integer) where {T <: Integer}
+function myparse(::Type{T}, a::ByteData, start::Integer, len::Integer) where {T <: Integer}
   i = start
   n::T = zero(T)
   s::T = one(T)
@@ -79,7 +79,7 @@ myparse(::Type{Float16}, s::Vector{UInt8}, pos::Int64, last::Int64) =
 
 include("parse-float.jl")
 
-@inline function myparse(::Type{T}, s::Vector{UInt8}, pos::Int64, last::Int64) where {
+@inline function myparse(::Type{T}, s::ByteData, pos::Int64, last::Int64) where {
             T<:Union{Float32,Float64}}
 
     return convert(T, parse_float(Float64, s, pos, last))
@@ -89,4 +89,4 @@ end
 
 
 ParsableNumbers = Union{Float16,Float32,Float64,Integer}
-myparse(::Type{T}, a::Vector{UInt8}) where {T <: ParsableNumbers}  = myparse(T, a, 1, length(a))
+myparse(::Type{T}, a::ByteData) where {T <: ParsableNumbers}  = myparse(T, a, 1, length(a))
