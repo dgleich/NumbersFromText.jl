@@ -4,13 +4,12 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
-  - 0.7
+  - 1.0
   - nightly
 notifications:
   email: false
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("NumbersFromText"); Pkg.test("NumbersFromText"; coverage=true)'
+  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("NumbersFromText"); Pkg.test("NumbersFromText"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("NumbersFromText")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'using Pkg; cd(Pkg.dir("NumbersFromText")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
